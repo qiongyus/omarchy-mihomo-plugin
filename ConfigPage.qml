@@ -9,6 +9,7 @@ Item {
   id: root
 
   property var svc: null
+  property var panel: null
   property color fg: Color.popups.text
   property string fontFamily: Style.font.family
 
@@ -121,6 +122,27 @@ Item {
           wrapMode: Text.WordWrap
           lineHeight: 1.25
           renderType: Text.NativeRendering
+        }
+      }
+
+      Card {
+        width: parent.width
+        foreground: root.fg
+
+        PanelSectionHeader {
+          text: root.svc ? root.svc.t("barSettings") : "Status bar"
+          foreground: root.fg
+          fontFamily: root.fontFamily
+        }
+
+        Toggle {
+          width: parent.width
+          label: root.svc ? root.svc.t("showModeTitle") : "Show routing mode"
+          description: root.svc ? root.svc.t("showModeHint") : "Display current mode (Rule / Global / Direct) next to the icon in the bar."
+          checked: root.panel ? root.panel.showMode : false
+          foreground: root.fg
+          fontFamily: root.fontFamily
+          onClicked: if (root.panel) root.panel.toggleShowMode()
         }
       }
 

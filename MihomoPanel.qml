@@ -25,6 +25,19 @@ Panel {
 
   readonly property bool connected: svc ? svc.connected : false
   readonly property string modeLabel: svc ? svc.modeLabel : "--"
+  readonly property bool showMode: root.setting("showMode", root.setting("showLabel", false)) === true
+
+  function setShowMode(enable) {
+    var next = !!enable
+    root.settings = Object.assign({}, root.settings, { showMode: next })
+    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function") {
+      root.bar.shell.updateEntryInline(root.moduleName, root.settings)
+    }
+  }
+
+  function toggleShowMode() {
+    setShowMode(!showMode)
+  }
 
   readonly property var currentPage: page === "proxies" ? proxiesPage
     : page === "config" ? configPage
@@ -76,6 +89,8 @@ Panel {
     function toggle(): void { root.toggle() }
 
     function page(name: string): void { root.goto(name) }
+    function toggleShowMode(): void { root.toggleShowMode() }
+    function setShowMode(enable: bool): void { root.setShowMode(enable) }
 
     function state(): string {
       if (!root.svc) return "{}"
@@ -105,7 +120,7 @@ Panel {
       ? ("mihomo · " + root.modeLabel
          + "\n↑ " + root.svc.fmtSpeed(root.svc.upSpeed) + "  ↓ " + root.svc.fmtSpeed(root.svc.downSpeed))
       : (root.svc ? root.svc.t("barDisconnected") : "mihomo · disconnected")
-    fixedWidth: vertical ? -1 : barContent.implicitWidth + Style.spaceReal(10)
+    fixedWidth: vertical ? -1 : (root.showMode ? barContent.implicitWidth + Style.spaceReal(10) : Style.bar.iconSlot)
     fixedHeight: vertical ? Style.bar.iconSlot : -1
     onPressed: function(mouseButton) { root.toggle() }
 
@@ -113,7 +128,7 @@ Panel {
       id: barContent
       visible: !button.vertical
       anchors.centerIn: parent
-      spacing: Style.spaceReal(3)
+      spacing: root.showMode ? Style.spaceReal(3) : 0
 
       Text {
         anchors.verticalCenter: parent.verticalCenter
@@ -125,6 +140,7 @@ Panel {
       }
 
       Text {
+        visible: root.showMode
         anchors.verticalCenter: parent.verticalCenter
         text: root.connected ? root.modeLabel : "--"
         textFormat: Text.PlainText
@@ -335,6 +351,7 @@ Panel {
           anchors.fill: parent
           visible: root.page === "config"
           svc: root.svc
+          panel: root
           fg: root.fg
           fontFamily: root.fontFamily
         }

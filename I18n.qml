@@ -172,7 +172,11 @@ QtObject {
     editorOpened: "Editor opened",
 
     language: "Language",
-    languageHint: "Default is English. The choice is saved in ~/.config/omarchy-mihomo/ui."
+    languageHint: "Default is English. The choice is saved in ~/.config/omarchy-mihomo/ui.",
+
+    barSettings: "Status bar",
+    showModeTitle: "Show routing mode",
+    showModeHint: "Display the current routing mode (Rule / Global / Direct) next to the icon in the bar."
   })
 
   readonly property var zh: ({
@@ -327,6 +331,10 @@ QtObject {
     editorOpened: "已打开编辑器",
 
     language: "语言",
-    languageHint: "默认英文。选择会保存在 ~/.config/omarchy-mihomo/ui。"
+    languageHint: "默认英文。选择会保存在 ~/.config/omarchy-mihomo/ui。",
+
+    barSettings: "状态栏",
+    showModeTitle: "显示分流模式",
+    showModeHint: "在状态栏图标旁显示当前分流模式名称（规则 / 全局 / 直连）。"
   })
 }
