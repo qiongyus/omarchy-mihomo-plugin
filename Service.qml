@@ -95,6 +95,7 @@ Item {
   property var groupNames: []
   property var delays: ({})
   property var testing: ({})
+  property var nodeProviders: ({})
 
   property real upSpeed: 0
   property real downSpeed: 0
@@ -212,6 +213,13 @@ Item {
   function proxyFor(name) {
     var p = proxies ? proxies[name] : undefined
     return p === undefined ? null : p
+  }
+
+  function providerOf(name) {
+    if (nodeProviders && nodeProviders[name]) return String(nodeProviders[name])
+    var p = proxyFor(name)
+    if (p && (p["provider-name"] || p.provider)) return String(p["provider-name"] || p.provider)
+    return ""
   }
 
   function isGroup(name) {
@@ -365,7 +373,30 @@ Item {
     }
 
     if (data.proxies && data.proxies.proxies) {
-      var nextProxies = data.proxies.proxies
+      var nextProxies = {}
+      for (var pKey in data.proxies.proxies) nextProxies[pKey] = data.proxies.proxies[pKey]
+
+      var nextNodeProviders = {}
+      var provMap = data.providers && data.providers.providers ? data.providers.providers : null
+      if (provMap) {
+        for (var provName in provMap) {
+          var provItem = provMap[provName]
+          var pList = provItem ? provItem.proxies : null
+          if (pList && pList.length) {
+            for (var j = 0; j < pList.length; j++) {
+              var item = pList[j]
+              if (item && item.name) {
+                nextNodeProviders[item.name] = provName
+                if (!nextProxies[item.name]) {
+                  nextProxies[item.name] = item
+                }
+              }
+            }
+          }
+        }
+      }
+      nodeProviders = nextNodeProviders
+
       var global = nextProxies["GLOBAL"]
       var ordered = []
       var seen = {}
@@ -723,9 +754,20 @@ Item {
     var next = queue.shift()
     testQueue = queue
     testProc.pendingName = next.name
-    testProc.pendingGroup = next.group
-    var path = (next.group ? "/group/" : "/proxies/") + encode(next.name)
-      + "/delay?timeout=" + testTimeout + "&url=" + encodeURIComponent(testUrl)
+    var path
+    if (next.group) {
+      path = "/group/" + encode(next.name)
+        + "/delay?timeout=" + testTimeout + "&url=" + encodeURIComponent(testUrl)
+    } else {
+      var provider = providerOf(next.name)
+      if (provider && provider !== "default") {
+        path = "/providers/proxies/" + encode(provider) + "/" + encode(next.name)
+          + "/healthcheck?timeout=" + testTimeout + "&url=" + encodeURIComponent(testUrl)
+      } else {
+        path = "/proxies/" + encode(next.name)
+          + "/delay?timeout=" + testTimeout + "&url=" + encodeURIComponent(testUrl)
+      }
+    }
     testProc.command = ["/usr/bin/bash", runner, "get", path]
     testProc.running = true
   }

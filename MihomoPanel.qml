@@ -91,6 +91,8 @@ Panel {
     function page(name: string): void { root.goto(name) }
     function toggleShowMode(): void { root.toggleShowMode() }
     function setShowMode(enable: bool): void { root.setShowMode(enable) }
+    function testNode(name: string): void { if (root.svc) root.svc.testNode(name) }
+    function delayOf(name: string): int { return root.svc ? root.svc.delayOf(name) : -1 }
 
     function state(): string {
       if (!root.svc) return "{}"

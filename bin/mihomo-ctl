@@ -448,18 +448,20 @@ or_null() {
 
 fetch_bundle() {
   local include_proxies="$1"
-  local dir version configs proxies
+  local dir version configs proxies providers_proxies
   dir="$(mktemp -d)"
   request GET /version >"$dir/version" &
   request GET /configs >"$dir/configs" &
   if [[ "$include_proxies" == 1 ]]; then
     request GET /proxies >"$dir/proxies" &
+    request GET /providers/proxies >"$dir/providers_proxies" &
   fi
   wait
   version="$(cat "$dir/version")"
   configs="$(cat "$dir/configs")"
   if [[ "$include_proxies" == 1 ]]; then
     proxies="$(cat "$dir/proxies")"
+    providers_proxies="$(cat "$dir/providers_proxies" 2>/dev/null || true)"
   fi
   rm -rf "$dir"
   if [[ -z "$version" ]]; then
@@ -468,8 +470,8 @@ fetch_bundle() {
   local sysproxy
   sysproxy="$(sysproxy_status_json)"
   if [[ "$include_proxies" == 1 ]]; then
-    printf '{"version":%s,"configs":%s,"proxies":%s,"sysproxy":%s}\n' \
-      "$(or_null "$version")" "$(or_null "$configs")" "$(or_null "$proxies")" "$sysproxy"
+    printf '{"version":%s,"configs":%s,"proxies":%s,"providers":%s,"sysproxy":%s}\n' \
+      "$(or_null "$version")" "$(or_null "$configs")" "$(or_null "$proxies")" "$(or_null "$providers_proxies")" "$sysproxy"
   else
     printf '{"version":%s,"configs":%s,"sysproxy":%s}\n' \
       "$(or_null "$version")" "$(or_null "$configs")" "$sysproxy"
