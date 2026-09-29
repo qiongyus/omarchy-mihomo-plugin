@@ -23,12 +23,17 @@ Item {
   property var shell: null
   property var manifest: null
 
-  readonly property bool ready: manifest !== null
+  // Omarchy strips __sourceDir from third-party manifests
+  // (shell.qml publicPluginManifest), so gating `ready` on it left every
+  // Process disabled and the panel permanently "Offline". pluginDir already
+  // falls back to the canonical install path; ready now follows pluginDir.
+  readonly property bool hasSourceDir: manifest !== null
     && manifest.__sourceDir !== undefined
     && String(manifest.__sourceDir) !== ""
-  readonly property string pluginDir: ready
+  readonly property string pluginDir: hasSourceDir
     ? String(manifest.__sourceDir)
     : Quickshell.env("HOME") + "/.config/omarchy/plugins/io.github.lijiawei0305-pixel.mihomo"
+  readonly property bool ready: pluginDir !== ""
   readonly property string runner: pluginDir + "/bin/mihomo-ctl"
 
   // Set by the panel. Drives poll cadence and the streaming subscriptions.
