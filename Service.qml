@@ -311,6 +311,7 @@ Item {
 
   function refreshPage() {
     if (page === "config") refreshConfig()
+    else if (page === "subscriptions") refreshProviders()
     else if (page === "rules") refreshRules()
     else if (page === "connections") refreshConnections()
     else refresh()
@@ -476,10 +477,27 @@ Item {
       return
     }
 
-    proxyProviders = []
+    var proxyList = []
+    var proxySource = (data.proxies && data.proxies.providers) || {}
+    for (var proxyName in proxySource) {
+      var p = proxySource[proxyName]
+      if (!p || String(p.vehicleType || "") === "Compatible") continue
+      var subInfo = p.subscriptionInfo || null
+      proxyList.push({
+        name: proxyName,
+        vehicleType: String(p.vehicleType || ""),
+        count: p.proxies && p.proxies.length ? p.proxies.length : 0,
+        updatedAt: String(p.updatedAt || ""),
+        upload: subInfo ? Number(subInfo.Upload || 0) : 0,
+        download: subInfo ? Number(subInfo.Download || 0) : 0,
+        total: subInfo ? Number(subInfo.Total || 0) : 0,
+        expire: subInfo ? Number(subInfo.Expire || 0) : 0
+      })
+    }
+    proxyList.sort(function(a, b) { return a.name.localeCompare(b.name) })
 
     var ruleList = []
-    var ruleSource = data.providers || (data.rules && data.rules.providers) || {}
+    var ruleSource = (data.rules && data.rules.providers) || data.providers || {}
     for (var ruleName in ruleSource) {
       var r = ruleSource[ruleName]
       ruleList.push({
@@ -493,12 +511,18 @@ Item {
     }
     ruleList.sort(function(a, b) { return a.name.localeCompare(b.name) })
     var stamp = ""
+    for (var j = 0; j < proxyList.length; j++) {
+      var pItem = proxyList[j]
+      stamp += pItem.name + "\x1f" + pItem.vehicleType + "\x1f" + pItem.count + "\x1f" + pItem.updatedAt + "\x1f" + pItem.upload + "\x1f" + pItem.download + "\x1f" + pItem.total + "\x1f" + pItem.expire + "\x1e"
+    }
+    stamp += "\x1d"
     for (var i = 0; i < ruleList.length; i++) {
       var item = ruleList[i]
       stamp += item.name + "\x1f" + item.behavior + "\x1f" + item.count + "\x1f" + item.updatedAt + "\x1e"
     }
     if (stamp === lastProvidersStamp) return
     lastProvidersStamp = stamp
+    proxyProviders = proxyList
     ruleProviders = ruleList
   }
 
@@ -675,6 +699,11 @@ Item {
   function closeAllConnections() {
     if (!ready) return
     enqueue(["delete", "/connections"], t("closedAll"))
+  }
+
+  function updateProxyProvider(name) {
+    if (!ready) return
+    enqueue(["put", "/providers/proxies/" + encode(name)], t("updatingSubscription", name))
   }
 
   function updateRuleProvider(name) {
@@ -915,7 +944,7 @@ Item {
 
   Process {
     id: providersProc
-    command: ["/usr/bin/bash", root.runner, "get", "/providers/rules"]
+    command: ["/usr/bin/bash", root.runner, "providers"]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.applyProviders(text)
@@ -965,6 +994,7 @@ Item {
       root.runNextAction()
       root.refresh(true)
       if (root.page === "connections") root.refreshConnections()
+      else if (root.page === "subscriptions") root.refreshProviders()
       else if (root.page === "config" || kind === "reload") {
         root.refreshConfigInfo()
         root.refreshProviders()

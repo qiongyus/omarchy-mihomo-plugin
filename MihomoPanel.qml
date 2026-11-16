@@ -41,6 +41,7 @@ Panel {
 
   readonly property var currentPage: page === "proxies" ? proxiesPage
     : page === "config" ? configPage
+    : page === "subscriptions" ? subscriptionsPage
     : page === "connections" ? connectionsPage
     : page === "rules" ? rulesPage
     : homePage
@@ -54,7 +55,7 @@ Panel {
   }
 
   function cyclePage(direction) {
-    var order = ["home", "proxies", "config", "connections", "rules"]
+    var order = ["home", "proxies", "config", "subscriptions", "connections", "rules"]
     var index = order.indexOf(page)
     if (index < 0) index = 0
     page = order[(index + direction + order.length) % order.length]
@@ -196,8 +197,9 @@ Panel {
         if (text === "1") root.goto("home")
         else if (text === "2") root.goto("proxies")
         else if (text === "3") root.goto("config")
-        else if (text === "4") root.goto("connections")
-        else if (text === "5") root.goto("rules")
+        else if (text === "4") root.goto("subscriptions")
+        else if (text === "5") root.goto("connections")
+        else if (text === "6") root.goto("rules")
         else if (text === "r" && root.svc) root.svc.refreshPage()
         else if (text === "/" && root.currentPage
                  && typeof root.currentPage.focusFilter === "function")
@@ -272,11 +274,12 @@ Panel {
             }
           }
 
-          NavButton { width: parent.width; pageId: "home";        glyph: "󰋜"; title: root.svc ? root.svc.t("navHome") : "Home" }
-          NavButton { width: parent.width; pageId: "proxies";     glyph: "󰖟"; title: root.svc ? root.svc.t("navProxies") : "Proxies" }
-          NavButton { width: parent.width; pageId: "config";      glyph: "󰈙"; title: root.svc ? root.svc.t("navConfig") : "Config" }
-          NavButton { width: parent.width; pageId: "connections"; glyph: "󰇧"; title: root.svc ? root.svc.t("navConnections") : "Connections" }
-          NavButton { width: parent.width; pageId: "rules";       glyph: "󰘬"; title: root.svc ? root.svc.t("navRules") : "Rules" }
+          NavButton { width: parent.width; pageId: "home";          glyph: "󰋜"; title: root.svc ? root.svc.t("navHome") : "Home" }
+          NavButton { width: parent.width; pageId: "proxies";       glyph: "󰖟"; title: root.svc ? root.svc.t("navProxies") : "Proxies" }
+          NavButton { width: parent.width; pageId: "config";        glyph: "󰈙"; title: root.svc ? root.svc.t("navConfig") : "Config" }
+          NavButton { width: parent.width; pageId: "subscriptions"; glyph: "󰇚"; title: root.svc ? root.svc.t("navSubscriptions") : "Subscriptions" }
+          NavButton { width: parent.width; pageId: "connections";   glyph: "󰇧"; title: root.svc ? root.svc.t("navConnections") : "Connections" }
+          NavButton { width: parent.width; pageId: "rules";         glyph: "󰘬"; title: root.svc ? root.svc.t("navRules") : "Rules" }
         }
 
         Column {
@@ -294,14 +297,6 @@ Panel {
           }
 
           Item { width: 1; height: Style.space(3) }
-
-          LanguageSwitch {
-            width: parent.width
-            compact: true
-            svc: root.svc
-            foreground: root.fg
-            fontFamily: root.fontFamily
-          }
 
           MiniStat { width: parent.width; glyph: "󰁝"; value: root.svc ? root.svc.fmtSpeed(root.svc.upSpeed) : "--" }
           MiniStat { width: parent.width; glyph: "󰁅"; value: root.svc ? root.svc.fmtSpeed(root.svc.downSpeed) : "--" }
@@ -354,6 +349,15 @@ Panel {
           visible: root.page === "config"
           svc: root.svc
           panel: root
+          fg: root.fg
+          fontFamily: root.fontFamily
+        }
+
+        SubscriptionsPage {
+          id: subscriptionsPage
+          anchors.fill: parent
+          visible: root.page === "subscriptions"
+          svc: root.svc
           fg: root.fg
           fontFamily: root.fontFamily
         }
